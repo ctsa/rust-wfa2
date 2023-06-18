@@ -166,6 +166,23 @@ impl WFAligner {
         AlignmentStatus::from(status)
     }
 
+    pub fn align_ends_free(&mut self, pattern: &[u8], text: &[u8]) -> AlignmentStatus {
+        let status = unsafe {
+            // Configure
+            let imax = i32::max_value();
+            wfa2::wavefront_aligner_set_alignment_free_ends(self.inner, imax, imax, imax, imax);
+            // Align
+            wfa2::wavefront_align(
+                self.inner,
+                pattern.as_ptr() as *const i8,
+                pattern.len() as i32,
+                text.as_ptr() as *const i8,
+                text.len() as i32,
+            )
+        };
+        AlignmentStatus::from(status)
+    }
+
     pub fn score(&self) -> i32 {
         unsafe { (*(*self.inner).cigar).score }
     }
