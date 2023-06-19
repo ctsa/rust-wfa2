@@ -8,7 +8,9 @@ pub mod wfa2 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aligner::{AlignmentScope, AlignmentStatus, MemoryModel, WFAlignerGapAffine};
+    use aligner::{
+        AlignmentScope, AlignmentStatus, MemoryModel, WFAlignerGapAffine, WFAlignerGapAffine2Pieces,
+    };
 
     #[test]
     fn test_end_to_end() {
@@ -72,5 +74,29 @@ mod tests {
         assert_eq!(status, AlignmentStatus::StatusSuccessful);
         assert_eq!(aligner.score(), 18);
         assert_eq!(aligner.cigar(), b"DDDDDDDDDMMMMMMMMMMMMMDDDDDDDDDD");
+    }
+
+    #[test]
+    fn test_end_to_end_affine2() {
+        let mut aligner = WFAlignerGapAffine2Pieces::new_with_match(
+            -1,
+            3,
+            3,
+            3,
+            10,
+            0,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"TCTATAATAGT";
+        let text = b"TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(aligner.score(), 1);
+        assert_eq!(
+            std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
+            "MMMMMMIIIIIIIIIIIIIIIIIIIIIMMMMM"
+        );
     }
 }
