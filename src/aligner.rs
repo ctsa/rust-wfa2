@@ -352,7 +352,8 @@ impl WFAlignerGapAffine {
 pub struct WFAlignerGapAffine2Pieces;
 
 impl WFAlignerGapAffine2Pieces {
-    pub fn new(
+    pub fn new_with_match(
+        match_: i32,
         mismatch: i32,
         gap_opening1: i32,
         gap_extension1: i32,
@@ -364,7 +365,7 @@ impl WFAlignerGapAffine2Pieces {
         let mut aligner = WFAligner::new(alignment_scope, memory_model);
         aligner.attributes = WFAttributes::default()
             .affine2p_penalties(
-                0,
+                match_,
                 mismatch,
                 gap_opening1,
                 gap_extension1,
@@ -377,6 +378,27 @@ impl WFAlignerGapAffine2Pieces {
             aligner.inner = wfa2::wavefront_aligner_new(&mut aligner.attributes.inner);
         }
         aligner
+    }
+
+    pub fn new(
+        mismatch: i32,
+        gap_opening1: i32,
+        gap_extension1: i32,
+        gap_opening2: i32,
+        gap_extension2: i32,
+        alignment_scope: AlignmentScope,
+        memory_model: MemoryModel,
+    ) -> WFAligner {
+        Self::new_with_match(
+            0,
+            mismatch,
+            gap_opening1,
+            gap_extension1,
+            gap_opening2,
+            gap_extension2,
+            alignment_scope,
+            memory_model,
+        )
     }
 }
 
