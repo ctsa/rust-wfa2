@@ -166,11 +166,24 @@ impl WFAligner {
         AlignmentStatus::from(status)
     }
 
-    pub fn align_ends_free(&mut self, pattern: &[u8], text: &[u8]) -> AlignmentStatus {
+    pub fn align_ends_free(
+        &mut self,
+        pattern: &[u8],
+        text: &[u8],
+        pattern_begin_free: i32,
+        pattern_end_free: i32,
+        text_begin_free: i32,
+        text_end_free: i32,
+    ) -> AlignmentStatus {
         let status = unsafe {
             // Configure
-            let imax = i32::max_value();
-            wfa2::wavefront_aligner_set_alignment_free_ends(self.inner, imax, imax, imax, imax);
+            wfa2::wavefront_aligner_set_alignment_free_ends(
+                self.inner,
+                pattern_begin_free,
+                pattern_end_free,
+                text_begin_free,
+                text_end_free,
+            );
             // Align
             wfa2::wavefront_align(
                 self.inner,
@@ -187,7 +200,7 @@ impl WFAligner {
         unsafe { (*(*self.inner).cigar).score }
     }
 
-    pub fn cigar(&self) -> String {
+    pub fn cigar(&self) -> Vec<u8> {
         let cigar_str = unsafe {
             let begin_offset = (*(*self.inner).cigar).begin_offset;
             let cigar_operations = (*(*self.inner).cigar)
@@ -196,7 +209,7 @@ impl WFAligner {
             let cigar_length = ((*(*self.inner).cigar).end_offset - begin_offset) as usize;
             slice::from_raw_parts(cigar_operations, cigar_length)
         };
-        String::from_utf8_lossy(cigar_str).to_string()
+        cigar_str.to_vec()
     }
 
     pub fn matching(&self, pattern: &[u8], text: &[u8]) -> (String, String, String) {
@@ -206,19 +219,19 @@ impl WFAligner {
         let mut pattern_match = String::new();
         let mut middle_match = String::new();
         let mut text_match = String::new();
-        for c in cigar.chars() {
+        for c in cigar.iter() {
             match c {
-                'M' | 'X' => {
+                b'M' | b'X' => {
                     pattern_match.push(*pattern_iter.next().unwrap() as char);
                     middle_match.push('|');
                     text_match.push(*text_iter.next().unwrap() as char);
                 }
-                'D' => {
+                b'D' => {
                     pattern_match.push(*pattern_iter.next().unwrap() as char);
                     middle_match.push(' ');
                     text_match.push('-');
                 }
-                'I' => {
+                b'I' => {
                     pattern_match.push('-');
                     middle_match.push(' ');
                     text_match.push(*text_iter.next().unwrap() as char);
@@ -329,7 +342,8 @@ impl WFAlignerGapLinear {
 pub struct WFAlignerGapAffine;
 
 impl WFAlignerGapAffine {
-    pub fn new(
+    pub fn new_with_match(
+        match_: i32,
         mismatch: i32,
         gap_opening: i32,
         gap_extension: i32,
@@ -338,13 +352,30 @@ impl WFAlignerGapAffine {
     ) -> WFAligner {
         let mut aligner = WFAligner::new(alignment_scope, memory_model);
         aligner.attributes = WFAttributes::default()
-            .affine_penalties(0, mismatch, gap_opening, gap_extension)
+            .affine_penalties(match_, mismatch, gap_opening, gap_extension)
             .alignment_scope(alignment_scope)
             .memory_model(memory_model);
         unsafe {
             aligner.inner = wfa2::wavefront_aligner_new(&mut aligner.attributes.inner);
         }
         aligner
+    }
+
+    pub fn new(
+        mismatch: i32,
+        gap_opening: i32,
+        gap_extension: i32,
+        alignment_scope: AlignmentScope,
+        memory_model: MemoryModel,
+    ) -> WFAligner {
+        Self::new_with_match(
+            0,
+            mismatch,
+            gap_opening,
+            gap_extension,
+            alignment_scope,
+            memory_model,
+        )
     }
 }
 
@@ -467,7 +498,7 @@ mod tests {
         let status = aligner.align_end_to_end(PATTERN, TEXT);
         assert_eq!(status, AlignmentStatus::StatusSuccessful);
         assert_eq!(aligner.score(), -24);
-        assert_eq!(aligner.cigar(), "MMMXMMMMDMMMMMMMIMMMMMMMMMXMMMMMM");
+        assert_eq!(aligner.cigar(), b"MMMXMMMMDMMMMMMMIMMMMMMMMMXMMMMMM");
         let (a, b, c) = aligner.matching(PATTERN, TEXT);
         assert_eq!(
             format!("{}\n{}\n{}", a, b, c),
