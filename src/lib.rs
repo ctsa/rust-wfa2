@@ -22,7 +22,7 @@ mod tests {
         let pattern = b"TCTTTACTCGCGCGTTGGAGAAATACAATAGT";
         let text = b"TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
         let status = aligner.align_end_to_end(pattern, text);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         assert_eq!(aligner.score(), -24);
         assert_eq!(aligner.cigar(), b"MMMXMMMMDMMMMMMMIMMMMMMMMMXMMMMMM");
         let (a, b, c) = aligner.matching(pattern, text);
@@ -56,8 +56,8 @@ mod tests {
             text_size,
             text_size,
         );
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
-        assert_eq!(aligner.score(), 18);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 13);
 
         // CIGAR output is configured for a reversed notion of pattern/text:
         assert_eq!(aligner.cigar(), b"IIIIIIIIIMMMMMMMMMMMMMIIIIIIIIII");
@@ -74,8 +74,8 @@ mod tests {
             text_size,
             text_size,
         );
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
-        assert_eq!(aligner.score(), 18);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 13);
         assert_eq!(aligner.cigar(), b"DDDDDDDDDMMMMMMMMMMMMMDDDDDDDDDD");
     }
 
@@ -103,7 +103,7 @@ mod tests {
             text_size,
             text_size,
         );
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         //assert_eq!(aligner.score(), 18);
 
         // CIGAR output is configured for a reversed notion of pattern/text:
@@ -131,7 +131,7 @@ mod tests {
         let pattern = b"TCTATAATAGT";
         let text = b"TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
         let status = aligner.align_end_to_end(pattern, text);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         assert_eq!(aligner.score(), 1);
         assert_eq!(
             std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
@@ -156,7 +156,7 @@ mod tests {
         let pattern = b"TCTATAATAGT";
         let text = b"TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
         let status = aligner.align_end_to_end(pattern, text);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         assert_eq!(aligner.score(), -73);
         assert_eq!(
             std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
@@ -182,11 +182,11 @@ mod tests {
         let pattern = b"A";
         let text = b"ACG";
         let status = aligner.align_ends_free(pattern, text, 0, 0, 0, 2);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
-        //assert_eq!(aligner.score(), 1);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 1);
 
         // bug version output
-        assert_eq!(aligner.score(), 2);
+        //assert_eq!(aligner.score(), 2);
 
         // CIGAR output is configured for a reversed notion of pattern/text:
         assert_eq!(
@@ -211,7 +211,7 @@ mod tests {
         let pattern = b"ATAATA";
         let text = b"ATACATAAAATA";
         let status = aligner.align_end_to_end(pattern, text);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         assert_eq!(aligner.score(), -2);
         assert_eq!(
             std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),

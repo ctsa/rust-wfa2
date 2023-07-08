@@ -14,7 +14,6 @@ impl bindgen::callbacks::ParseCallbacks for IgnoreMacros {
 }
 
 fn main() {
-    println!("cargo:rerun-if-changed=WFA2-lib/wavefront/wfa.h");
     let out_dir = cmake::Config::new("WFA2-lib")
         .cflag("-DCMAKE_BUILD_TYPE=Release")
         // As recommended by the README on master.
