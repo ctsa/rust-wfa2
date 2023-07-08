@@ -320,7 +320,8 @@ impl WFAlignerEdit {
 pub struct WFAlignerGapLinear;
 
 impl WFAlignerGapLinear {
-    pub fn new(
+    pub fn new_with_match(
+        match_: i32,
         mismatch: i32,
         indel: i32,
         alignment_scope: AlignmentScope,
@@ -328,13 +329,22 @@ impl WFAlignerGapLinear {
     ) -> WFAligner {
         let mut aligner = WFAligner::new(alignment_scope, memory_model);
         aligner.attributes = WFAttributes::default()
-            .linear_penalties(0, mismatch, indel)
+            .linear_penalties(match_, mismatch, indel)
             .alignment_scope(alignment_scope)
             .memory_model(memory_model);
         unsafe {
             aligner.inner = wfa2::wavefront_aligner_new(&mut aligner.attributes.inner);
         }
         aligner
+    }
+
+    pub fn new(
+        mismatch: i32,
+        indel: i32,
+        alignment_scope: AlignmentScope,
+        memory_model: MemoryModel,
+    ) -> WFAligner {
+        Self::new_with_match(0, mismatch, indel, alignment_scope, memory_model)
     }
 }
 
