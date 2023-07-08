@@ -9,9 +9,11 @@ pub mod wfa2 {
 mod tests {
     use super::*;
     use aligner::{
-        AlignmentScope, AlignmentStatus, MemoryModel, WFAlignerGapAffine, WFAlignerGapAffine2Pieces,
+        AlignmentScope, AlignmentStatus, MemoryModel, WFAlignerGapAffine,
+        WFAlignerGapAffine2Pieces, WFAlignerGapLinear,
     };
 
+    /// Reproduce basic test from library README
     #[test]
     fn test_end_to_end() {
         let mut aligner =
@@ -30,6 +32,7 @@ mod tests {
         );
     }
 
+    /// Test align_ends_free method and new_with_match ctor
     #[test]
     fn test_ends_free() {
         let mut aligner = WFAlignerGapAffine::new_with_match(
@@ -76,6 +79,42 @@ mod tests {
         assert_eq!(aligner.cigar(), b"DDDDDDDDDMMMMMMMMMMMMMDDDDDDDDDD");
     }
 
+    /// Change pattern to test test the left-right shift behavior of this library
+    #[test]
+    fn test_ends_free_shift() {
+        let mut aligner = WFAlignerGapAffine::new_with_match(
+            -1,
+            3,
+            2,
+            1,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"TATATTTTTTTTGGAGAAATAAAATA";
+        let text = b"TCTATATTTTTTTTTGGAGAAATAAAATAGT";
+        let pattern_size = pattern.len() as i32;
+        let text_size = text.len() as i32;
+        let status = aligner.align_ends_free(
+            pattern,
+            text,
+            pattern_size,
+            pattern_size,
+            text_size,
+            text_size,
+        );
+        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        //assert_eq!(aligner.score(), 18);
+
+        // CIGAR output is configured for a reversed notion of pattern/text:
+        assert_eq!(
+            std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
+            "IIMMMMMMMMMMMMIMMMMMMMMMMMMMMII"
+        );
+    }
+
+    /// Test double affine mode, and with 0 gap extension to see if a long gap
+    /// is created as expected
     #[test]
     fn test_end_to_end_affine2() {
         let mut aligner = WFAlignerGapAffine2Pieces::new_with_match(
@@ -97,6 +136,86 @@ mod tests {
         assert_eq!(
             std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
             "MMMMMMIIIIIIIIIIIIIIIIIIIIIMMMMM"
+        );
+    }
+
+    /// Test double affine mode, and with 0 gap open
+    #[test]
+    fn test_end_to_end_affine2_zero_open() {
+        let mut aligner = WFAlignerGapAffine2Pieces::new_with_match(
+            -1,
+            3,
+            0,
+            4,
+            0,
+            10,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"TCTATAATAGT";
+        let text = b"TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(aligner.score(), -73);
+        assert_eq!(
+            std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
+            "MMMMMMIIIIIIIIIIIIMIIIIMMIIIIIMM"
+        );
+    }
+
+    /// This test reproduces a bug found in WFA2-lib main branch at 94bcccd.
+    ///
+    /// A version directly in C is submitted here:
+    /// https://github.com/smarco/WFA2-lib/issues/73
+    ///
+    #[test]
+    fn test_ends_free_bug() {
+        let mut aligner = WFAlignerGapLinear::new_with_match(
+            -1,
+            1,
+            1,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryHigh,
+        );
+
+        let pattern = b"A";
+        let text = b"ACG";
+        let status = aligner.align_ends_free(pattern, text, 0, 0, 0, 2);
+        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        //assert_eq!(aligner.score(), 1);
+
+        // bug version output
+        assert_eq!(aligner.score(), 2);
+
+        // CIGAR output is configured for a reversed notion of pattern/text:
+        assert_eq!(
+            std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
+            "MII"
+        );
+    }
+
+    /// Test simple end to end affine gap example to verify that large gap is created as expected
+    ///
+    #[test]
+    fn test_end_to_end_affine() {
+        let mut aligner = WFAlignerGapAffine::new_with_match(
+            -1,
+            2,
+            2,
+            1,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"ATAATA";
+        let text = b"ATACATAAAATA";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(aligner.score(), -2);
+        assert_eq!(
+            std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
+            "MMMIIIIIIMMM"
         );
     }
 }
