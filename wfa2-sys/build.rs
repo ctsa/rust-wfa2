@@ -42,7 +42,6 @@ fn main() {
         .header("WFA2-lib/wavefront/wfa.h")
         .clang_arg("--include-directory=WFA2-lib")
         .parse_callbacks(Box::new(ignored_macros))
-        .rustfmt_bindings(true)
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(out_dir.join("bindings.rs"))
