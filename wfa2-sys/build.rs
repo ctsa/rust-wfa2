@@ -14,7 +14,9 @@ impl bindgen::callbacks::ParseCallbacks for IgnoreMacros {
 }
 
 fn main() {
-    println!("cargo:rerun-if-changed=WFA2-lib/wavefront/wfa.h");
+    //println!("cargo:rerun-if-changed=WFA2-lib/wavefront/wfa.h");
+    //println!("cargo:rerun-if-changed=WFA2-lib/utils/commons.h");
+    //println!("cargo:rerun-if-changed=WFA2-lib/CMakeLists.txt");
     let out_dir = cmake::Config::new("WFA2-lib")
         .cflag("-DCMAKE_BUILD_TYPE=Release")
         // As recommended by the README on master.
@@ -46,4 +48,6 @@ fn main() {
         .expect("Unable to generate bindings")
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+    //    panic!("out_dir is {out_dir:?}");
 }
