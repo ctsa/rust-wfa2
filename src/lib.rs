@@ -57,7 +57,7 @@ mod tests {
             text_size,
         );
         assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
-        assert_eq!(aligner.score(), 18);
+        assert_eq!(aligner.score(), 13);
 
         // CIGAR output is configured for a reversed notion of pattern/text:
         assert_eq!(aligner.cigar(), b"IIIIIIIIIMMMMMMMMMMMMMIIIIIIIIII");
@@ -75,7 +75,7 @@ mod tests {
             text_size,
         );
         assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
-        assert_eq!(aligner.score(), 18);
+        assert_eq!(aligner.score(), 13);
         assert_eq!(aligner.cigar(), b"DDDDDDDDDMMMMMMMMMMMMMDDDDDDDDDD");
     }
 
@@ -183,10 +183,10 @@ mod tests {
         let text = b"ACG";
         let status = aligner.align_ends_free(pattern, text, 0, 0, 0, 2);
         assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
-        //assert_eq!(aligner.score(), 1);
+        assert_eq!(aligner.score(), 1);
 
         // bug version output
-        assert_eq!(aligner.score(), 2);
+        //assert_eq!(aligner.score(), 2);
 
         // CIGAR output is configured for a reversed notion of pattern/text:
         assert_eq!(
