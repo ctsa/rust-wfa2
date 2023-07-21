@@ -168,7 +168,7 @@ impl WFAligner {
         AlignmentStatus::from(status)
     }
 
-    pub fn align_ends_free(
+    fn align_ends_free_dir(
         &mut self,
         pattern: &[u8],
         text: &[u8],
@@ -176,6 +176,7 @@ impl WFAligner {
         pattern_end_free: i32,
         text_begin_free: i32,
         text_end_free: i32,
+        reverse: bool,
     ) -> AlignmentStatus {
         let status = unsafe {
             // Configure
@@ -187,15 +188,56 @@ impl WFAligner {
                 text_end_free,
             );
             // Align
-            wfa2::wavefront_align(
+            wfa2::wavefront_align_dir(
                 self.inner,
                 pattern.as_ptr() as *const i8,
                 pattern.len() as i32,
                 text.as_ptr() as *const i8,
                 text.len() as i32,
+                reverse,
             )
         };
         AlignmentStatus::from(status)
+    }
+
+    pub fn align_ends_free(
+        &mut self,
+        pattern: &[u8],
+        text: &[u8],
+        pattern_begin_free: i32,
+        pattern_end_free: i32,
+        text_begin_free: i32,
+        text_end_free: i32,
+    ) -> AlignmentStatus {
+        self.align_ends_free_dir(
+            pattern,
+            text,
+            pattern_begin_free,
+            pattern_end_free,
+            text_begin_free,
+            text_end_free,
+            false,
+        )
+    }
+
+    pub fn align_ends_free_reverse(
+        &mut self,
+        pattern: &[u8],
+        text: &[u8],
+        pattern_begin_free: i32,
+        pattern_end_free: i32,
+        text_begin_free: i32,
+        text_end_free: i32,
+    ) -> AlignmentStatus {
+        self.align_ends_free_dir(
+            pattern,
+            text,
+            pattern_begin_free,
+            pattern_end_free,
+            text_begin_free,
+            text_end_free,
+            true,
+        )
     }
 
     pub fn score(&self) -> i32 {
