@@ -13,6 +13,40 @@ mod tests {
         WFAlignerGapAffine2Pieces, WFAlignerGapLinear,
     };
 
+    /// Compress WFA2 cigar so that it's easier to read
+    fn compress_cigar(cigar: &Vec<u8>) -> String {
+        let mut out = String::new();
+
+        let mut runlen = 0;
+        let mut current_type = 0;
+
+        for c in cigar {
+            if current_type == *c {
+                runlen += 1;
+            } else {
+                if runlen > 0 {
+                    out += format!(
+                        "{}{}",
+                        runlen,
+                        std::str::from_utf8(&[current_type]).unwrap()
+                    )
+                    .as_str();
+                }
+                runlen = 1;
+                current_type = *c;
+            }
+        }
+        if runlen > 0 {
+            out += format!(
+                "{}{}",
+                runlen,
+                std::str::from_utf8(&[current_type]).unwrap()
+            )
+            .as_str();
+        }
+        out
+    }
+
     /// Reproduce basic test from library README
     #[test]
     fn test_end_to_end() {
@@ -60,7 +94,7 @@ mod tests {
         assert_eq!(aligner.score(), 13);
 
         // CIGAR output is configured for a reversed notion of pattern/text:
-        assert_eq!(aligner.cigar(), b"IIIIIIIIIMMMMMMMMMMMMMIIIIIIIIII");
+        assert_eq!(compress_cigar(&aligner.cigar()), "9I13M10I");
 
         let pattern = b"TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
         let text = b"CGCGTTTGGAGAA";
@@ -76,7 +110,7 @@ mod tests {
         );
         assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         assert_eq!(aligner.score(), 13);
-        assert_eq!(aligner.cigar(), b"DDDDDDDDDMMMMMMMMMMMMMDDDDDDDDDD");
+        assert_eq!(compress_cigar(&aligner.cigar()), "9D13M10D");
     }
 
     /// Change pattern to test test the left-right shift behavior of this library
@@ -133,10 +167,7 @@ mod tests {
         let status = aligner.align_end_to_end(pattern, text);
         assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
         assert_eq!(aligner.score(), 1);
-        assert_eq!(
-            std::str::from_utf8(aligner.cigar().as_slice()).unwrap(),
-            "MMMMMMIIIIIIIIIIIIIIIIIIIIIMMMMM"
-        );
+        assert_eq!(compress_cigar(&aligner.cigar()), "6M21I5M");
     }
 
     /// Test double affine mode, and with 0 gap open
