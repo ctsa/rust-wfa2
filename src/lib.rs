@@ -249,4 +249,69 @@ mod tests {
             "MMMIIIIIIMMM"
         );
     }
+
+    /// Test case expected to have equal score
+    #[test]
+    fn test_linear() {
+        let mut aligner = WFAlignerGapAffine::new_with_match(
+            -1,
+            2,
+            0,
+            1,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"ATAATA";
+        let text = b"ATACATAAAATA";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 0);
+
+        let mut aligner = WFAlignerGapLinear::new_with_match(
+            -1,
+            2,
+            1,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"ATAATA";
+        let text = b"ATACATAAAATA";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 0);
+    }
+
+    /// Test case expected to have equal score
+    #[test]
+    fn test_score_only() {
+        let mut aligner = WFAlignerGapLinear::new_with_match(
+            -1,
+            2,
+            1,
+            AlignmentScope::Alignment,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"ATAATA";
+        let text = b"ATACATAAAATA";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 0);
+
+        let mut aligner = WFAlignerGapLinear::new_with_match(
+            -1,
+            2,
+            1,
+            AlignmentScope::Score,
+            MemoryModel::MemoryLow,
+        );
+
+        let pattern = b"ATAATA";
+        let text = b"ATACATAAAATA";
+        let status = aligner.align_end_to_end(pattern, text);
+        assert_eq!(status, AlignmentStatus::StatusAlgCompleted);
+        assert_eq!(aligner.score(), 0);
+    }
 }
