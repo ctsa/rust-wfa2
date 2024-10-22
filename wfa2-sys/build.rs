@@ -17,7 +17,7 @@ fn main() {
     let out_dir = cmake::Config::new("WFA2-lib")
         .cflag("-DCMAKE_BUILD_TYPE=Release")
         // As recommended by the README on master.
-        .cflag("-DEXTRA_FLAGS=\"-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5 -march=native\"")
+        .cflag("-DEXTRA_FLAGS=\"-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5\"")
         .build();
     println!("cargo:rustc-link-search=native={}/lib", out_dir.display());
     println!("cargo:rustc-link-search=native={}/lib64", out_dir.display());
